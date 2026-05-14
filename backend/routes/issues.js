@@ -136,9 +136,10 @@ router.patch('/:id/fix', async (req, res) => {
     if (error) throw error;
     res.json({ success: true, issue: data });
 
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
+ } catch (error) {
+  console.error('FULL ERROR:', error);
+  res.status(500).json({ success: false, error: error.message });
+}
 });
 
 module.exports = router;
