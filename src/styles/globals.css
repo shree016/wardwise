@@ -4,87 +4,91 @@
 
 @layer base {
   :root {
-    --foreground: 0 0% 98%;
-    --background: 0 0% 3.9%;
+    /* Light Mode — elegant, modern, premium enterprise */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
 
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 214 32% 96%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
+    --tertiary: 214 32% 91%;
+    --tertiary-foreground: 222 47% 11%;
 
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
+    --subtle: 250 100% 97%;
+    --subtle-foreground: 262 83% 58%;
 
-    --destructive: 0 62.8% 30.6%;
+    --muted: 214 32% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 250 100% 97%;
+    --accent-foreground: 262 83% 58%;
+
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 262 83% 58%;
 
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    /* Dark Mode — futuristic, cinematic, neon smart-city */
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    --card: 240 10% 5.5%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
+    --popover: 240 10% 5.5%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 271 91% 65%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
+    --secondary: 240 5% 14.9%;
+    --secondary-foreground: 0 0% 98%;
 
-    --tertiary: 0 0% 90%;
-    --tertiary-foreground: 0 0% 9%;
+    --tertiary: 240 5% 19%;
+    --tertiary-foreground: 0 0% 98%;
 
-    --subtle: 240 6% 90%;
-    --subtle-foreground: 0 0% 9%;
+    --subtle: 240 5% 12%;
+    --subtle-foreground: 240 5% 65%;
 
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
+    --muted: 240 5% 14.9%;
+    --muted-foreground: 240 5% 64.9%;
 
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
+    --accent: 240 5% 14.9%;
+    --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
+    --border: 240 5% 18%;
+    --input: 240 5% 18%;
+    --ring: 271 91% 65%;
   }
 }
 
 ::selection {
-  background-color: rgba(168, 85, 247, 0.2);
+  background-color: rgba(168, 85, 247, 0.25);
   color: hsl(var(--foreground));
 }
 
-html, body {
+html,
+body {
   font-family: "Inter", sans-serif !important;
-}
-
-.dumy {
-  color: hsl(0 0% 98%);
-  color: rgb(38, 38, 38)
-    /* @apply to-purple-500 */
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 ::-webkit-scrollbar {
@@ -101,10 +105,48 @@ html, body {
   background: rgba(0, 0, 0, 0);
 }
 
+/* Dark mode — deep neon gradient glow */
 .gradient {
-  background: conic-gradient(from 230.29deg at 51.63% 52.16%, rgb(36, 0, 255) 0deg, rgb(0, 135, 255) 67.5deg, rgb(108, 39, 157) 198.75deg, rgb(24, 38, 163) 251.25deg, rgb(54, 103, 196) 301.88deg, rgb(105, 30, 255) 360deg);
+  background: conic-gradient(
+    from 230.29deg at 51.63% 52.16%,
+    rgb(109, 40, 217) 0deg,
+    rgb(59, 130, 246) 67.5deg,
+    rgb(139, 92, 246) 198.75deg,
+    rgb(37, 99, 235) 251.25deg,
+    rgb(99, 102, 241) 301.88deg,
+    rgb(168, 85, 247) 360deg
+  );
+}
+
+/* Light mode gradient override */
+:root .gradient {
+  background: conic-gradient(
+    from 230.29deg at 51.63% 52.16%,
+    rgb(124, 58, 237) 0deg,
+    rgb(99, 102, 241) 67.5deg,
+    rgb(139, 92, 246) 198.75deg,
+    rgb(79, 70, 229) 251.25deg,
+    rgb(109, 40, 217) 301.88deg,
+    rgb(124, 58, 237) 360deg
+  );
 }
 
 .not-found {
-  box-shadow: rgba(150, 18, 226, 0.3) 5px 5px;
+  box-shadow: rgba(139, 92, 246, 0.3) 5px 5px;
+}
+
+/* Smooth theme transition */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Override transition on animations to not interfere */
+.animate-flip,
+.animate-rotate,
+.animate-border-beam,
+.animate-image-glow,
+.animate-marquee {
+  transition: none;
 }
