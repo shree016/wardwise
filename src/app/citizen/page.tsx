@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/components/providers/auth-context';
+import { useUser, useClerk } from '@clerk/nextjs';
+import { MapPinIcon, LogOutIcon, MapIcon, TrophyIcon, CameraIcon } from 'lucide-react';
 
 interface Issue {
   id: string;
@@ -24,19 +25,112 @@ interface Issue {
 }
 
 export default function CitizenPage() {
+  const translations = {
+  en: {
+    citizen: "Citizen",
+    map: "Map",
+    wards: "Wards",
+    report: "Report",
+    logout: "Logout",
+
+    welcome: "Welcome back! 👋",
+    subtitle: "Help make Bangalore better — report issues and verify fixes",
+
+    totalIssues: "Total Issues in City",
+    awaiting: "Fixes Awaiting Verification",
+    resolved: "Issues Resolved",
+
+    reportIssue: "Report an Issue",
+    uploadPhoto: "Upload photo — AI classifies automatically",
+
+    viewMap: "View Live Map",
+    seeIssues: "See all issues in your area",
+
+    recentIssues: "Recent Issues",
+    verifyFixes: "Verify Fixes",
+    resolvedTab: "Resolved",
+
+    leaderboard: "Ward Leaderboard",
+    leaderboardSub: "See how your ward ranks against others",
+
+    viewLeaderboard: "View Leaderboard →",
+  },
+
+  kn: {
+    citizen: "ನಾಗರಿಕ",
+    map: "ನಕ್ಷೆ",
+    wards: "ವಾರ್ಡ್‌ಗಳು",
+    report: "ದೂರು",
+    logout: "ಲಾಗ್ ಔಟ್",
+
+    welcome: "ಮತ್ತೆ ಸ್ವಾಗತ! 👋",
+    subtitle: "ಬೆಂಗಳೂರು ಉತ್ತಮವಾಗಲು ಸಹಕರಿಸಿ",
+
+    totalIssues: "ನಗರದ ಒಟ್ಟು ಸಮಸ್ಯೆಗಳು",
+    awaiting: "ಪರಿಶೀಲನೆಗಾಗಿ ಕಾಯುತ್ತಿದೆ",
+    resolved: "ಪರಿಹರಿಸಿದ ಸಮಸ್ಯೆಗಳು",
+
+    reportIssue: "ಸಮಸ್ಯೆ ವರದಿ ಮಾಡಿ",
+    uploadPhoto: "ಫೋಟೋ ಅಪ್ಲೋಡ್ ಮಾಡಿ",
+
+    viewMap: "ಲೈವ್ ನಕ್ಷೆ ನೋಡಿ",
+    seeIssues: "ನಿಮ್ಮ ಪ್ರದೇಶದ ಸಮಸ್ಯೆಗಳನ್ನು ನೋಡಿ",
+
+    recentIssues: "ಇತ್ತೀಚಿನ ಸಮಸ್ಯೆಗಳು",
+    verifyFixes: "ಸರಿಪಡಿಸಿದುದನ್ನು ಪರಿಶೀಲಿಸಿ",
+    resolvedTab: "ಪರಿಹರಿಸಲಾಗಿದೆ",
+
+    leaderboard: "ವಾರ್ಡ್ ಲೀಡರ್‌ಬೋರ್ಡ್",
+    leaderboardSub: "ನಿಮ್ಮ ವಾರ್ಡ್ ರ್ಯಾಂಕ್ ನೋಡಿ",
+
+    viewLeaderboard: "ಲೀಡರ್‌ಬೋರ್ಡ್ ನೋಡಿ →",
+  },
+
+  hi: {
+    citizen: "नागरिक",
+    map: "मैप",
+    wards: "वार्ड",
+    report: "रिपोर्ट",
+    logout: "लॉग आउट",
+
+    welcome: "वापसी पर स्वागत है! 👋",
+    subtitle: "बैंगलोर को बेहतर बनाने में मदद करें",
+
+    totalIssues: "शहर की कुल समस्याएं",
+    awaiting: "सत्यापन की प्रतीक्षा",
+    resolved: "समाधान की गई समस्याएं",
+
+    reportIssue: "समस्या रिपोर्ट करें",
+    uploadPhoto: "फोटो अपलोड करें",
+
+    viewMap: "लाइव मैप देखें",
+    seeIssues: "अपने क्षेत्र की समस्याएं देखें",
+
+    recentIssues: "हाल की समस्याएं",
+    verifyFixes: "समाधान सत्यापित करें",
+    resolvedTab: "समाधान",
+
+    leaderboard: "वार्ड लीडरबोर्ड",
+    leaderboardSub: "अपने वार्ड की रैंक देखें",
+
+    viewLeaderboard: "लीडरबोर्ड देखें →",
+  },
+};
   const [issues, setIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState('');
+  const [language, setLanguage] = useState<"en" | "kn" | "hi">("en");
   const [activeTab, setActiveTab] = useState<'my_reports' | 'verify_needed' | 'resolved'>('my_reports');
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, isLoaded } = useUser();
+  const { signOut } = useClerk();
 
   useEffect(() => {
-    if (authLoading) return;
-    const email = user?.email || '';
+    if (!isLoaded) return;
+    const email = user?.primaryEmailAddress?.emailAddress || '';
     setUserEmail(email);
     if (email === 'bbmp@wardwise.com') router.push('/dashboard');
-  }, [authLoading, user, router]);
+  }, [isLoaded, user, router]);
 
   useEffect(() => {
     fetchIssues();
@@ -89,18 +183,64 @@ export default function CitizenPage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
+        <div className="max-w-5xl mx-auto px-6 py-3 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-blue-500 flex items-center justify-center shadow-[0_0_10px_rgba(139,92,246,0.5)]">
+                <MapPinIcon className="w-4 h-4 text-white" strokeWidth={2.5} />
+              </div>
+              <span className="text-lg font-bold bg-gradient-to-r from-violet-500 to-blue-400 bg-clip-text text-transparent">
+                NammaMarg
+              </span>
+            </Link>
+            <span className="hidden sm:block text-xs text-muted-foreground border border-border rounded-full px-2 py-0.5">
+              {translations[language].citizen}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+          <select
+  value={language}
+  onChange={(e) => setLanguage(e.target.value as "en" | "kn" | "hi")}
+  className="bg-secondary border border-border rounded-lg px-2 py-1 text-sm"
+>
+  <option value="en">English</option>
+  <option value="kn">Kannada</option>
+  <option value="hi">Hindi</option>
+</select>
+            <span className="hidden md:block text-sm text-muted-foreground">{userEmail}</span>
+            <Link href="/map" className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-secondary/80 text-foreground transition-colors">
+              <MapIcon className="w-3.5 h-3.5" /> {translations[language].map}
+            </Link>
+            <Link href="/wards" className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-secondary/80 text-foreground transition-colors">
+              <TrophyIcon className="w-3.5 h-3.5" /> {translations[language].wards}
+            </Link>
+            <Link href="/report" className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white transition-all shadow-[0_0_10px_rgba(139,92,246,0.3)]">
+              <CameraIcon className="w-3.5 h-3.5" /> {translations[language].report}
+            </Link>
+            <button
+              onClick={() => signOut({ redirectUrl: '/' })}
+              className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive transition-colors"
+            >
+              <LogOutIcon className="w-3.5 h-3.5" /> {translations[language].logout}
+            </button>
+          </div>
+        </div>
+      </header>
+
       <div className="max-w-5xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-foreground">Welcome back! 👋</h2>
-          <p className="text-muted-foreground mt-1">Help make Bangalore better — report issues and verify fixes</p>
+          <h2 className="text-3xl font-bold text-foreground">{translations[language].welcome}</h2>
+          <p className="text-muted-foreground mt-1">{translations[language].subtitle}</p>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
-            { label: 'Total Issues in City', value: issues.length, color: 'text-violet-400', border: 'border-violet-500/20' },
-            { label: 'Fixes Awaiting Verification', value: needsVerification.length, color: 'text-yellow-400', border: 'border-yellow-500/20' },
-            { label: 'Issues Resolved', value: resolved.length, color: 'text-green-400', border: 'border-green-500/20' },
+            { label: translations[language].totalIssues, value: issues.length, color: 'text-violet-400', border: 'border-violet-500/20' },
+            { label: translations[language].awaiting, value: needsVerification.length, color: 'text-yellow-400', border: 'border-yellow-500/20' },
+            { label: translations[language].resolved, value: resolved.length, color: 'text-green-400', border: 'border-green-500/20' },
           ].map((stat, i) => (
             <div key={i} className={`bg-card rounded-xl p-5 border ${stat.border} text-center`}>
               <div className={`text-3xl font-bold ${stat.color}`}>{stat.value}</div>
@@ -178,9 +318,6 @@ export default function CitizenPage() {
                       {issue.status}
                     </span>
                     <span className="text-muted-foreground text-xs">{new Date(issue.created_at).toLocaleDateString()}</span>
-                    <Link href={`/issues/${issue.id}`} className="text-xs bg-secondary hover:bg-secondary/80 text-foreground px-2 py-1 rounded-lg transition-colors border border-border whitespace-nowrap">
-                      Details →
-                    </Link>
                   </div>
                 </div>
               ))}

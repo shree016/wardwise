@@ -1,181 +1,111 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { AnimationContainer } from "@/components";
+import MaxWidthWrapper from "@/components/global/max-width-wrapper";
 import { MapPinIcon } from "lucide-react";
+
+const PRODUCT_LINKS = [
+  { label: "Features", href: "/#features" },
+  { label: "Live Map", href: "/#live-map" },
+  { label: "Dashboard", href: "/#dashboard" },
+  { label: "Analytics", href: "/#analytics" },
+] as const;
+
+const LEGAL_LINKS = [
+  { label: "Privacy", href: "/privacy" },
+  { label: "Terms", href: "/terms" },
+] as const;
+
+const FooterLink = ({
+  href,
+  children,
+}: {
+  href: string;
+  children: ReactNode;
+}) => (
+  <Link
+    href={href}
+    className="inline-block text-sm text-muted-foreground transition-colors duration-200 hover:text-violet-600 dark:hover:text-violet-400"
+  >
+    {children}
+  </Link>
+);
+
+const FooterColumn = ({
+  title,
+  links,
+}: {
+  title: string;
+  links: readonly { label: string; href: string }[];
+}) => (
+  <div>
+    <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground">
+      {title}
+    </h3>
+    <ul className="space-y-3">
+      {links.map(({ label, href }) => (
+        <li key={href}>
+          <FooterLink href={href}>{label}</FooterLink>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
 
 const Footer = () => {
   return (
-    <footer className="flex flex-col relative items-center justify-center border-t border-border/40 pt-16 pb-8 md:pb-0 px-6 lg:px-8 w-full max-w-6xl mx-auto lg:pt-32 bg-[radial-gradient(35%_128px_at_50%_0%,hsl(var(--primary)/0.08),transparent)]">
-      <div className="absolute top-0 left-1/2 right-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1.5 bg-gradient-to-r from-violet-500 to-blue-500 rounded-full" />
+    <footer className="relative mt-16 w-full overflow-x-hidden border-t border-border/50">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(var(--primary)/0.06),transparent)]"
+      />
 
-      <div className="grid gap-8 xl:grid-cols-3 xl:gap-8 w-full">
-        {/* Brand */}
+      <MaxWidthWrapper className="relative z-10 pb-6 pt-12 lg:pb-8 lg:pt-14">
+        <div className="absolute left-1/2 top-0 h-1 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-violet-500 to-blue-500" />
+
         <AnimationContainer delay={0.1}>
-          <div className="flex flex-col items-start justify-start md:max-w-[220px]">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-blue-500 flex items-center justify-center shadow-[0_0_10px_rgba(139,92,246,0.4)]">
-                <MapPinIcon className="w-4 h-4 text-white" strokeWidth={2.5} />
-              </div>
-              <span className="text-lg font-bold font-heading bg-gradient-to-r from-violet-500 to-blue-400 bg-clip-text text-transparent">
-                NammaMarg
-              </span>
+          <div className="flex flex-col gap-10 border-b border-border/40 pb-10 lg:flex-row lg:items-start lg:justify-between lg:gap-20 lg:pb-12">
+            <div className="max-w-md">
+              <Link
+                href="/#home"
+                className="group inline-flex items-center gap-2.5"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-blue-500 shadow-[0_0_12px_rgba(139,92,246,0.35)] transition-shadow duration-300 group-hover:shadow-[0_0_18px_rgba(139,92,246,0.55)]">
+                  <MapPinIcon className="h-4 w-4 text-white" strokeWidth={2.5} />
+                </div>
+                <span className="bg-gradient-to-r from-violet-500 to-blue-400 bg-clip-text font-heading text-xl font-bold text-transparent">
+                  NammaMarg
+                </span>
+              </Link>
+              <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
+                AI-powered civic issue detection and smart infrastructure for
+                modern cities.
+              </p>
+              <p className="mt-3 text-sm font-medium text-violet-600/90 dark:text-violet-400/90">
+                See it. Report it. Fix it.
+              </p>
             </div>
-            <p className="text-muted-foreground mt-4 text-sm text-start leading-relaxed">
-              AI-powered civic issue detection and smart infrastructure management for modern cities.
-            </p>
-            <span className="mt-4 text-sm text-muted-foreground">
-              &ldquo;See it. Report it. Fix it.&rdquo;
-            </span>
+
+            <div className="grid w-full max-w-xs grid-cols-2 gap-x-12 gap-y-8 sm:max-w-none sm:gap-x-20 lg:ml-auto lg:w-auto lg:gap-x-24">
+              <FooterColumn title="Product" links={PRODUCT_LINKS} />
+              <FooterColumn title="Legal" links={LEGAL_LINKS} />
+            </div>
           </div>
         </AnimationContainer>
 
-        <div className="grid-cols-2 gap-8 grid mt-16 xl:col-span-2 xl:mt-0">
-          <div className="md:grid md:grid-cols-2 md:gap-8">
-            {/* Product */}
-            <AnimationContainer delay={0.2}>
-              <div>
-                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
-                  Product
-                </h3>
-                <ul className="mt-4 text-sm text-muted-foreground space-y-2">
-                  <li>
-                    <Link href="/#features" className="hover:text-foreground transition-colors duration-200">
-                      Features
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/#ai-detection" className="hover:text-foreground transition-colors duration-200">
-                      AI Detection
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/#dashboard" className="hover:text-foreground transition-colors duration-200">
-                      Dashboard
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/#heatmaps" className="hover:text-foreground transition-colors duration-200">
-                      Heatmaps
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-            </AnimationContainer>
+        <p className="pt-8 text-center text-xs text-muted-foreground sm:text-left">
+          &copy; {new Date().getFullYear()} NammaMarg. All rights reserved.
+        </p>
 
-            {/* Resources */}
-            <AnimationContainer delay={0.3}>
-              <div className="mt-10 md:mt-0 flex flex-col">
-                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
-                  Resources
-                </h3>
-                <ul className="mt-4 text-sm text-muted-foreground space-y-2">
-                  <li>
-                    <Link href="" className="hover:text-foreground transition-colors duration-200">
-                      Documentation
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="" className="hover:text-foreground transition-colors duration-200">
-                      API
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="" className="hover:text-foreground transition-colors duration-200">
-                      Support
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-            </AnimationContainer>
-          </div>
-
-          <div className="md:grid md:grid-cols-2 md:gap-8">
-            {/* Company */}
-            <AnimationContainer delay={0.4}>
-              <div>
-                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
-                  Company
-                </h3>
-                <ul className="mt-4 text-sm text-muted-foreground space-y-2">
-                  <li>
-                    <Link href="" className="hover:text-foreground transition-colors duration-200">
-                      About
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="" className="hover:text-foreground transition-colors duration-200">
-                      Contact
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/privacy" className="hover:text-foreground transition-colors duration-200">
-                      Privacy Policy
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-            </AnimationContainer>
-
-            {/* Cities */}
-            <AnimationContainer delay={0.5}>
-              <div className="mt-10 md:mt-0 flex flex-col">
-                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
-                  Cities
-                </h3>
-                <ul className="mt-4 text-sm text-muted-foreground space-y-2">
-                  <li>
-                    <Link href="" className="hover:text-foreground transition-colors duration-200">
-                      Bangalore
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="" className="hover:text-foreground transition-colors duration-200">
-                      Mumbai
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="" className="hover:text-foreground transition-colors duration-200">
-                      Hyderabad
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="" className="hover:text-foreground transition-colors duration-200">
-                      Delhi
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-            </AnimationContainer>
-          </div>
+        <div
+          aria-hidden
+          className="pointer-events-none mt-6 hidden justify-center md:flex"
+        >
+          <span className="select-none whitespace-nowrap font-heading text-[6.5rem] font-black leading-none tracking-tighter text-foreground/[0.025] dark:text-foreground/[0.035] lg:text-[7.5rem]">
+            NAMMAMARG
+          </span>
         </div>
-      </div>
-
-      <div className="mt-8 border-t border-border/40 pt-6 md:pt-8 md:flex md:items-center md:justify-between w-full">
-        <AnimationContainer delay={0.6}>
-          <p className="text-sm text-muted-foreground mt-4 md:mt-0">
-            &copy; 2026 NammaMarg. Smart Civic Infrastructure Platform.
-          </p>
-        </AnimationContainer>
-        <AnimationContainer delay={0.7}>
-          <div className="flex gap-4 mt-4 md:mt-0">
-            <Link href="" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              Terms
-            </Link>
-            <Link href="/privacy" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              Privacy
-            </Link>
-            <Link href="" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              Cookies
-            </Link>
-          </div>
-        </AnimationContainer>
-      </div>
-
-      {/* Large footer text */}
-      <div className="h-24 lg:h-32 flex items-center justify-center mt-4 w-full overflow-hidden">
-        <span className="text-[4rem] lg:text-[6rem] font-black font-heading text-center bg-gradient-to-r from-violet-500/20 via-blue-500/20 to-indigo-500/20 bg-clip-text text-transparent select-none tracking-tight">
-          NAMMAMARG
-        </span>
-      </div>
+      </MaxWidthWrapper>
     </footer>
   );
 };
