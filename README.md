@@ -25,7 +25,7 @@ WardWise is an AI-powered civic issue reporting platform built for Bangalore. Ci
 
 | Layer | Technologies |
 |-------|----------------|
-| **Frontend** | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Leaflet / react-leaflet, Axios |
+| **Frontend** | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Axios, Leaflet / react-leaflet |
 | **Backend** | Node.js, Express 5, CORS, dotenv |
 | **Database & Auth** | Supabase (PostgreSQL + Auth) |
 | **AI** | Google Gemini 2.5 Flash Lite (REST API) |
