@@ -14,23 +14,30 @@ import {
     SheetTrigger
 } from "@/components/ui/sheet";
 import { cn, NAV_LINKS } from "@/utils";
-import { useAuth } from "@clerk/nextjs";
-import { LucideIcon, Menu, X } from "lucide-react";
+import { useAuth } from "@/components/providers/auth-context";
+import { BarChart3Icon, CameraIcon, LayoutDashboardIcon, LogOutIcon, LucideIcon, MapIcon, Menu, TrophyIcon, X } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from 'react';
+import { ThemeToggle } from "./navbar";
+
+const CIVIC_LINKS = [
+    { href: "/map", label: "Map", icon: MapIcon },
+    { href: "/wards", label: "Wards", icon: TrophyIcon },
+    { href: "/report", label: "Report Issue", icon: CameraIcon },
+    { href: "/architecture", label: "Architecture", icon: BarChart3Icon },
+    { href: "/citizen", label: "Dashboard", icon: LayoutDashboardIcon },
+];
 
 const MobileNavbar = () => {
-
-    const { isSignedIn, signOut } = useAuth();
-
+    const { user, signOut } = useAuth();
+    const isSignedIn = !!user;
     const [isOpen, setIsOpen] = useState<boolean>(false);
 
-    const handleClose = () => {
-        setIsOpen(false);
-    };
+    const handleClose = () => setIsOpen(false);
 
     return (
-        <div className="flex lg:hidden items-center justify-end">
+        <div className="flex lg:hidden items-center gap-2 justify-end">
+            <ThemeToggle />
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
                 <SheetTrigger asChild>
                     <Button size="icon" variant="ghost">
@@ -44,91 +51,100 @@ const MobileNavbar = () => {
                         </Button>
                     </SheetClose>
                     <div className="flex flex-col items-start w-full py-2 mt-10">
-                        <div className="flex items-center justify-evenly w-full space-x-2">
-                            {isSignedIn ? (
-                                <Link href="/dashboard" className={buttonVariants({ variant: "outline", className: "w-full" })}>
-                                    Dashboard
-                                </Link>
-                            ) : (
-                                <>
-                                    <Link href="/auth/sign-in" className={buttonVariants({ variant: "outline", className: "w-full" })}>
+                        {isSignedIn ? (
+                            <div className="w-full space-y-1">
+                                {CIVIC_LINKS.map(({ href, label, icon: Icon }) => (
+                                    <Link
+                                        key={href}
+                                        href={href}
+                                        onClick={handleClose}
+                                        className="flex items-center gap-3 w-full px-3 py-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-all"
+                                    >
+                                        <Icon className="w-4 h-4" />
+                                        <span className="font-medium">{label}</span>
+                                    </Link>
+                                ))}
+                                <button
+                                    onClick={() => { handleClose(); signOut({ redirectUrl: "/" }); }}
+                                    className="flex items-center gap-3 w-full px-3 py-3 rounded-lg text-destructive hover:bg-destructive/10 transition-all"
+                                >
+                                    <LogOutIcon className="w-4 h-4" />
+                                    <span className="font-medium">Logout</span>
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="flex items-center justify-evenly w-full space-x-2 mb-6">
+                                    <Link href="/auth/sign-in" onClick={handleClose} className={buttonVariants({ variant: "outline", className: "w-full" })}>
                                         Sign In
                                     </Link>
-                                </>
-                            )}
-                        </div>
-                        <ul className="flex flex-col items-start w-full mt-6">
-                            <Accordion type="single" collapsible className="!w-full">
-                                {NAV_LINKS.map((link) => (
-                                    <AccordionItem key={link.title} value={link.title} className="last:border-none">
-                                        {link.menu ? (
-                                            <>
-                                                <AccordionTrigger>
-                                                    {link.title}
-                                                </AccordionTrigger>
-                                                <AccordionContent>
-                                                    <ul
+                                    <Link href="/report" onClick={handleClose} className={buttonVariants({ className: "w-full bg-gradient-to-r from-violet-600 to-blue-600 text-white border-0" })}>
+                                        Report Issue
+                                    </Link>
+                                </div>
+                                <ul className="flex flex-col items-start w-full">
+                                    <Accordion type="single" collapsible className="!w-full">
+                                        {NAV_LINKS.map((link) => (
+                                            <AccordionItem key={link.title} value={link.title} className="last:border-none">
+                                                {link.menu ? (
+                                                    <>
+                                                        <AccordionTrigger>{link.title}</AccordionTrigger>
+                                                        <AccordionContent>
+                                                            <ul onClick={handleClose} className={cn("w-full")}>
+                                                                {link.menu.map((menuItem) => (
+                                                                    <ListItem key={menuItem.title} title={menuItem.title} href={menuItem.href} icon={menuItem.icon}>
+                                                                        {menuItem.tagline}
+                                                                    </ListItem>
+                                                                ))}
+                                                            </ul>
+                                                        </AccordionContent>
+                                                    </>
+                                                ) : (
+                                                    <Link
+                                                        href={link.href}
                                                         onClick={handleClose}
-                                                        className={cn(
-                                                            "w-full",
-                                                        )}
+                                                        className="flex items-center w-full py-4 font-medium text-muted-foreground hover:text-foreground"
                                                     >
-                                                        {link.menu.map((menuItem) => (
-                                                            <ListItem key={menuItem.title} title={menuItem.title} href={menuItem.href} icon={menuItem.icon}>
-                                                                {menuItem.tagline}
-                                                            </ListItem>
-                                                        ))}
-                                                    </ul>
-                                                </AccordionContent>
-                                            </>
-                                        ) : (
-                                            <Link
-                                                href={link.href}
-                                                onClick={handleClose}
-                                                className="flex items-center w-full py-4 font-medium text-muted-foreground hover:text-foreground"
-                                            >
-                                                <span>{link.title}</span>
-                                            </Link>
-                                        )}
-                                    </AccordionItem>
-                                ))}
-                            </Accordion>
-                        </ul>
+                                                        <span>{link.title}</span>
+                                                    </Link>
+                                                )}
+                                            </AccordionItem>
+                                        ))}
+                                    </Accordion>
+                                </ul>
+                            </>
+                        )}
                     </div>
                 </SheetContent>
             </Sheet>
         </div>
-    )
+    );
 };
 
 const ListItem = React.forwardRef<
     React.ElementRef<"a">,
     React.ComponentPropsWithoutRef<"a"> & { title: string; icon: LucideIcon }
->(({ className, title, href, icon: Icon, children, ...props }, ref) => {
-    return (
-        <li>
-            <Link
-                href={href!}
-                ref={ref}
-                className={cn(
-                    "block select-none space-y-1 rounded-lg p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-                    className
-                )}
-                {...props}
-            >
-                <div className="flex items-center space-x-2 text-foreground">
-                    <Icon className="h-4 w-4" />
-                    <h6 className="text-sm !leading-none">
-                        {title}
-                    </h6>
-                </div>
-                <p title={children! as string} className="line-clamp-1 text-sm leading-snug text-muted-foreground">
-                    {children}
-                </p>
-            </Link>
-        </li>
-    )
-})
-ListItem.displayName = "ListItem"
+>(({ className, title, href, icon: Icon, children, ...props }, ref) => (
+    <li>
+        <Link
+            href={href!}
+            ref={ref}
+            className={cn(
+                "block select-none space-y-1 rounded-lg p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+                className
+            )}
+            {...props}
+        >
+            <div className="flex items-center space-x-2 text-foreground">
+                <Icon className="h-4 w-4" />
+                <h6 className="text-sm !leading-none">{title}</h6>
+            </div>
+            <p title={children! as string} className="line-clamp-1 text-sm leading-snug text-muted-foreground">
+                {children}
+            </p>
+        </Link>
+    </li>
+));
+ListItem.displayName = "ListItem";
 
-export default MobileNavbar
+export default MobileNavbar;

@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import axios from 'axios';
-import { useUser, useClerk } from '@clerk/nextjs';
-import { MapPinIcon, LogOutIcon, MapIcon, ArrowLeftIcon, ClockIcon, UserIcon } from 'lucide-react';
+import { useAuth } from '@/components/providers/auth-context';
+import { ArrowLeftIcon, ClockIcon, MapPinIcon, UserIcon } from 'lucide-react';
 
 interface Issue {
   id: string; ticket_number: string; issue_type: string; severity: string; severity_score: number;
@@ -59,9 +59,8 @@ export default function IssueDetailPage() {
   const [complaintForm, setComplaintForm] = useState({ type: 'poor_quality', description: '', name: '' });
   const [submittingComplaint, setSubmittingComplaint] = useState(false);
 
-  const { user } = useUser();
-  const { signOut } = useClerk();
-  const userEmail = user?.primaryEmailAddress?.emailAddress || '';
+  const { user } = useAuth();
+  const userEmail = user?.email || '';
   const isBBMP = userEmail === 'bbmp@wardwise.com';
 
   useEffect(() => { if (id) fetchData(); }, [id]);
@@ -145,32 +144,6 @@ export default function IssueDetailPage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
-        <div className="max-w-6xl mx-auto px-6 py-3 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <Link href={isBBMP ? '/dashboard' : '/citizen'} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <ArrowLeftIcon className="w-4 h-4" /> Back
-            </Link>
-            <div className="w-px h-4 bg-border" />
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-violet-600 to-blue-500 flex items-center justify-center">
-                <MapPinIcon className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-              </div>
-              <span className="text-base font-bold bg-gradient-to-r from-violet-500 to-blue-400 bg-clip-text text-transparent">NammaMarg</span>
-            </Link>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link href="/map" className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
-              <MapIcon className="w-3.5 h-3.5" /> Map
-            </Link>
-            <button onClick={() => signOut({ redirectUrl: '/' })} className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive transition-colors">
-              <LogOutIcon className="w-3.5 h-3.5" /> Logout
-            </button>
-          </div>
-        </div>
-      </header>
-
       <div className="max-w-6xl mx-auto px-6 py-8">
 
         {/* Issue Hero */}

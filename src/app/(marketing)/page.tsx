@@ -14,7 +14,6 @@ import MagicBadge from "@/components/ui/magic-badge";
 import MagicCard from "@/components/ui/magic-card";
 import { PROCESS } from "@/utils";
 import { REVIEWS } from "@/utils/constants/misc";
-import { currentUser } from "@clerk/nextjs/server";
 import {
   ArrowRightIcon,
   BrainCircuitIcon,
@@ -209,9 +208,7 @@ const MapMockup = () => (
 
 /* ─── Main page ─────────────────────────────────────────────── */
 
-const HomePage = async () => {
-  const user = await currentUser();
-
+const HomePage = () => {
   const CIVIC_FEATURES = [
     {
       icon: BrainCircuitIcon,

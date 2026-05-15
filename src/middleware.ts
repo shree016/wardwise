@@ -1,35 +1,56 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { createServerClient } from '@supabase/ssr';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 const PROTECTED_ROUTES = ["/report", "/citizen", "/wards", "/dashboard", "/issues", "/verify", "/map"];
 
-export default clerkMiddleware((auth, req) => {
-    const url = req.nextUrl.pathname;
-    const { userId } = auth();
+export async function middleware(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({ request });
 
-    // Redirect legacy /login to Clerk sign-in
-    if (url.startsWith("/login")) {
-        return NextResponse.redirect(new URL("/auth/sign-in", req.url));
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
     }
+  );
 
-    // Protect civic routes — unauthenticated users go to sign-in
-    if (!userId && PROTECTED_ROUTES.some(route => url.startsWith(route))) {
-        return NextResponse.redirect(new URL("/auth/sign-in", req.url));
-    }
+  const { data: { user } } = await supabase.auth.getUser();
+  const url = request.nextUrl.pathname;
 
-    // Redirect authenticated Clerk users away from auth pages back to home
-    if (userId && (url.startsWith("/auth/sign-in") || url.startsWith("/auth/sign-up"))) {
-        return NextResponse.redirect(new URL("/", req.url));
-    }
-});
+  if (url.startsWith('/login')) {
+    return NextResponse.redirect(new URL('/auth/sign-in', request.url));
+  }
+
+  if (!user && PROTECTED_ROUTES.some(route => url.startsWith(route))) {
+    return NextResponse.redirect(new URL('/auth/sign-in', request.url));
+  }
+
+  if (user && (url.startsWith('/auth/sign-in') || url.startsWith('/auth/sign-up'))) {
+    return NextResponse.redirect(new URL('/citizen', request.url));
+  }
+
+  return supabaseResponse;
+}
 
 export const config = {
-    matcher: [
-        "/((?!.*\\..*|_next).*)",
-        "/(api|trpc)(.*)",
-        "/",
-        "/login",
-        "/auth/sign-in",
-        "/auth/sign-up",
-    ],
+  matcher: [
+    '/((?!.*\\..*|_next).*)',
+    '/(api|trpc)(.*)',
+    '/',
+    '/login',
+    '/auth/sign-in',
+    '/auth/sign-up',
+  ],
 };

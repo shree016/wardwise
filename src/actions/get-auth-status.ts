@@ -1,15 +1,24 @@
 "use server";
 
-import { currentUser } from "@clerk/nextjs/server";
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 const getAuthStatus = async () => {
-    const user = await currentUser();
-
-    if (!user?.id || !user?.primaryEmailAddress?.emailAddress) {
-        return { error: "User not found" };
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return cookieStore.getAll(); },
+        setAll() {},
+      },
     }
+  );
 
-    return { success: true };
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.email) return { error: "User not found" };
+  return { success: true };
 };
 
 export default getAuthStatus;

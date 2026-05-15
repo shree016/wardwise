@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import { useUser, useClerk } from '@clerk/nextjs';
-import { MapPinIcon, LogOutIcon, MapIcon, TrophyIcon, CameraIcon } from 'lucide-react';
+import { useAuth } from '@/components/providers/auth-context';
 
 interface Issue {
   id: string;
@@ -30,15 +29,14 @@ export default function CitizenPage() {
   const [userEmail, setUserEmail] = useState('');
   const [activeTab, setActiveTab] = useState<'my_reports' | 'verify_needed' | 'resolved'>('my_reports');
   const router = useRouter();
-  const { user, isLoaded } = useUser();
-  const { signOut } = useClerk();
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    if (!isLoaded) return;
-    const email = user?.primaryEmailAddress?.emailAddress || '';
+    if (authLoading) return;
+    const email = user?.email || '';
     setUserEmail(email);
     if (email === 'bbmp@wardwise.com') router.push('/dashboard');
-  }, [isLoaded, user, router]);
+  }, [authLoading, user, router]);
 
   useEffect(() => {
     fetchIssues();
@@ -91,43 +89,6 @@ export default function CitizenPage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
-        <div className="max-w-5xl mx-auto px-6 py-3 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-blue-500 flex items-center justify-center shadow-[0_0_10px_rgba(139,92,246,0.5)]">
-                <MapPinIcon className="w-4 h-4 text-white" strokeWidth={2.5} />
-              </div>
-              <span className="text-lg font-bold bg-gradient-to-r from-violet-500 to-blue-400 bg-clip-text text-transparent">
-                NammaMarg
-              </span>
-            </Link>
-            <span className="hidden sm:block text-xs text-muted-foreground border border-border rounded-full px-2 py-0.5">
-              Citizen
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="hidden md:block text-sm text-muted-foreground">{userEmail}</span>
-            <Link href="/map" className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-secondary/80 text-foreground transition-colors">
-              <MapIcon className="w-3.5 h-3.5" /> Map
-            </Link>
-            <Link href="/wards" className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-secondary/80 text-foreground transition-colors">
-              <TrophyIcon className="w-3.5 h-3.5" /> Wards
-            </Link>
-            <Link href="/report" className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white transition-all shadow-[0_0_10px_rgba(139,92,246,0.3)]">
-              <CameraIcon className="w-3.5 h-3.5" /> Report
-            </Link>
-            <button
-              onClick={() => signOut({ redirectUrl: '/' })}
-              className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive transition-colors"
-            >
-              <LogOutIcon className="w-3.5 h-3.5" /> Logout
-            </button>
-          </div>
-        </div>
-      </header>
-
       <div className="max-w-5xl mx-auto px-6 py-8">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-foreground">Welcome back! 👋</h2>

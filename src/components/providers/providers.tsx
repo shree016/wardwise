@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { ClerkProvider } from "@clerk/nextjs";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
+import { AuthProvider } from "./auth-context";
 
 interface Props {
   children: React.ReactNode;
@@ -15,7 +15,7 @@ const Providers = ({ children }: Props) => {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange={false}>
       <QueryClientProvider client={client}>
-        <ClerkProvider>{children}</ClerkProvider>
+        <AuthProvider>{children}</AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

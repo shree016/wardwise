@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import { useUser, useClerk } from '@clerk/nextjs';
-import { MapPinIcon, LogOutIcon, MapIcon, TrophyIcon, ExternalLinkIcon, XIcon } from 'lucide-react';
+import { useAuth } from '@/components/providers/auth-context';
+import { ExternalLinkIcon, XIcon } from 'lucide-react';
 
 interface Issue {
   id: string; ticket_number: string; issue_type: string; severity: string; severity_score: number;
@@ -31,15 +31,14 @@ export default function DashboardPage() {
   const [analytics, setAnalytics] = useState<any>(null);
 
   const router = useRouter();
-  const { user, isLoaded } = useUser();
-  const { signOut } = useClerk();
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    if (!isLoaded) return;
-    const email = user?.primaryEmailAddress?.emailAddress || '';
+    if (authLoading) return;
+    const email = user?.email || '';
     setUserEmail(email);
     if (email && email !== 'bbmp@wardwise.com') router.push('/citizen');
-  }, [isLoaded, user, router]);
+  }, [authLoading, user, router]);
 
   useEffect(() => { fetchData(); }, []);
 
@@ -129,28 +128,6 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
-        <div className="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-blue-500 flex items-center justify-center shadow-[0_0_10px_rgba(139,92,246,0.5)]">
-                <MapPinIcon className="w-4 h-4 text-white" strokeWidth={2.5} />
-              </div>
-              <span className="text-lg font-bold bg-gradient-to-r from-violet-500 to-blue-400 bg-clip-text text-transparent">NammaMarg</span>
-            </Link>
-            <span className="hidden sm:block text-xs text-muted-foreground border border-border rounded-full px-2 py-0.5">BBMP Dashboard</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="hidden md:block text-sm text-muted-foreground">{userEmail}</span>
-            <Link href="/architecture" className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">🏗️ Architecture</Link>
-            <Link href="/map" className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"><MapIcon className="w-3.5 h-3.5" /> Map</Link>
-            <Link href="/wards" className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"><TrophyIcon className="w-3.5 h-3.5" /> Wards</Link>
-            <button onClick={() => signOut({ redirectUrl: '/' })} className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive transition-colors"><LogOutIcon className="w-3.5 h-3.5" /> Logout</button>
-          </div>
-        </div>
-      </header>
-
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Stat cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

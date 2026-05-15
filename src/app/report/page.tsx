@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import { useUser, useClerk } from '@clerk/nextjs';
-import { MapPinIcon, LogOutIcon, MapIcon, TrophyIcon, UploadIcon, LocateIcon } from 'lucide-react';
+import { useAuth } from '@/components/providers/auth-context';
+import { UploadIcon, LocateIcon } from 'lucide-react';
 
 const wards = [
   { number: 1, name: 'Koramangala' },
@@ -37,14 +37,13 @@ export default function ReportPage() {
   });
 
   const router = useRouter();
-  const { user, isLoaded } = useUser();
-  const { signOut } = useClerk();
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    if (!isLoaded) return;
-    const email = user?.primaryEmailAddress?.emailAddress || '';
+    if (authLoading) return;
+    const email = user?.email || '';
     if (email === 'bbmp@wardwise.com') router.push('/dashboard');
-  }, [isLoaded, user, router]);
+  }, [authLoading, user, router]);
 
   const getLocation = () => {
     if (!navigator.geolocation) { alert('Geolocation not supported'); return; }
@@ -129,34 +128,6 @@ export default function ReportPage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
-        <div className="max-w-4xl mx-auto px-6 py-3 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-blue-500 flex items-center justify-center shadow-[0_0_10px_rgba(139,92,246,0.5)]">
-              <MapPinIcon className="w-4 h-4 text-white" strokeWidth={2.5} />
-            </div>
-            <span className="text-lg font-bold bg-gradient-to-r from-violet-500 to-blue-400 bg-clip-text text-transparent">
-              NammaMarg
-            </span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <Link href="/map" className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-secondary/80 text-foreground transition-colors">
-              <MapIcon className="w-3.5 h-3.5" /> Map
-            </Link>
-            <Link href="/wards" className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-secondary/80 text-foreground transition-colors">
-              <TrophyIcon className="w-3.5 h-3.5" /> Wards
-            </Link>
-            <button
-              onClick={() => signOut({ redirectUrl: '/' })}
-              className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive transition-colors"
-            >
-              <LogOutIcon className="w-3.5 h-3.5" /> Logout
-            </button>
-          </div>
-        </div>
-      </header>
-
       <div className="max-w-4xl mx-auto px-6 py-10">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-foreground">Report a Civic Issue</h2>
