@@ -217,6 +217,9 @@ export default function CitizenPage() {
                       {issue.status}
                     </span>
                     <span className="text-muted-foreground text-xs">{new Date(issue.created_at).toLocaleDateString()}</span>
+                    <Link href={`/issues/${issue.id}`} className="text-xs bg-secondary hover:bg-secondary/80 text-foreground px-2 py-1 rounded-lg transition-colors border border-border whitespace-nowrap">
+                      Details →
+                    </Link>
                   </div>
                 </div>
               ))}

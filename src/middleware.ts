@@ -1,7 +1,7 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-const PROTECTED_ROUTES = ["/report", "/citizen", "/wards", "/dashboard"];
+const PROTECTED_ROUTES = ["/report", "/citizen", "/wards", "/dashboard", "/issues", "/verify", "/map"];
 
 export default clerkMiddleware((auth, req) => {
     const url = req.nextUrl.pathname;
