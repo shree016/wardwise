@@ -132,11 +132,14 @@ export default function DashboardPage() {
         {/* Stat cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
-            { label: 'Total Issues', value: issues.length, color: 'text-foreground', border: 'border-border' },
-            { label: 'Open Issues', value: totalOpen, color: 'text-red-400', border: 'border-red-500/20' },
-            { label: 'Fixed (Unverified)', value: totalFixed, color: 'text-yellow-400', border: 'border-yellow-500/20' },
-            { label: 'Verified Fixed', value: totalVerified, color: 'text-green-400', border: 'border-green-500/20' },
-          ].map((stat, i) => (
+  { label: '📋 Total Issues', value: issues.length, color: 'text-foreground', border: 'border-border' },
+
+  { label: '🚨 Open Issues', value: totalOpen, color: 'text-red-400', border: 'border-red-500/20' },
+
+  { label: '🛠 Fixed Issues', value: totalFixed, color: 'text-yellow-400', border: 'border-yellow-500/20' },
+
+  { label: '✅ Verified Fixed', value: totalVerified, color: 'text-green-400', border: 'border-green-500/20' },
+].map((stat, i) => (
             <div key={i} className={`bg-card rounded-xl p-5 border ${stat.border}`}>
               <div className={`text-3xl font-bold ${stat.color}`}>{stat.value}</div>
               <div className="text-muted-foreground text-sm mt-1">{stat.label}</div>
