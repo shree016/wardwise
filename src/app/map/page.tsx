@@ -3,232 +3,276 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import axios from 'axios';
-import 'leaflet/dist/leaflet.css';
+import dynamic from 'next/dynamic';
+import type { Issue } from './MapboxCanvas';
 
-interface Issue {
-  id: string;
-  issue_type: string;
-  severity: string;
-  severity_score: number;
-  status: string;
-  description: string;
-  latitude: number;
-  longitude: number;
-  ward_name: string;
-  reporter_name: string;
-  reported_count: number;
-  created_at: string;
-}
+// Load map only on client — mapbox-gl references browser globals (window, Worker)
+const MapboxCanvas = dynamic(() => import('./MapboxCanvas'), {
+  ssr: false,
+  loading: () => (
+    <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0d0d0d] gap-3">
+      <div className="w-10 h-10 rounded-full border-2 border-white/10 border-t-violet-500 animate-spin" />
+      <p className="text-white/40 text-sm">Loading map…</p>
+    </div>
+  ),
+});
 
-const issueIcon = (type: string, severity: string) => {
-  const colors: Record<string, string> = {
-    high: '#ef4444',
-    medium: '#f59e0b',
-    low: '#22c55e',
-  };
-  const emojis: Record<string, string> = {
-    pothole: '🕳️',
-    garbage_dump: '🗑️',
-    broken_streetlight: '💡',
-    other: '⚠️',
-  };
-  return { color: colors[severity] || '#6b7280', emoji: emojis[type] || '⚠️' };
+const ISSUE_TYPES = ['all', 'pothole', 'garbage_dump', 'broken_streetlight'];
+const STATUSES = ['all', 'open', 'fixed', 'verified'];
+
+const issueEmoji = (type: string) => {
+  if (type === 'pothole') return '🕳️';
+  if (type === 'garbage_dump') return '🗑️';
+  if (type === 'broken_streetlight') return '💡';
+  return '⚠️';
+};
+
+const statusClass = (status: string) => {
+  if (status === 'open') return 'bg-red-500/10 text-red-400 border border-red-500/30';
+  if (status === 'fixed') return 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/30';
+  return 'bg-green-500/10 text-green-400 border border-green-500/30';
+};
+
+const severityClass = (severity: string) => {
+  if (severity === 'high') return 'bg-red-500/10 text-red-400 border border-red-500/30';
+  if (severity === 'medium') return 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/30';
+  return 'bg-green-500/10 text-green-400 border border-green-500/30';
 };
 
 export default function MapPage() {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [selected, setSelected] = useState<Issue | null>(null);
-  const [filter, setFilter] = useState('all');
-  const [MapComponents, setMapComponents] = useState<any>(null);
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [loadingIssues, setLoadingIssues] = useState(true);
 
   useEffect(() => {
-    fetchIssues();
-    import('leaflet').then((L) => {
-      import('react-leaflet').then((RL) => {
-        setMapComponents({ L, RL });
-      });
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    axios.get('/api/issues')
+      .then(res => setIssues(res.data.issues || []))
+      .catch(err => console.error('Failed to fetch issues:', err))
+      .finally(() => setLoadingIssues(false));
   }, []);
 
-  const fetchIssues = async () => {
-    try {
-      const res = await axios.get(`/api/issues`);
-      setIssues(res.data.issues);
-    } catch (err) {
-      console.error('Failed to fetch issues:', err);
-    }
-  };
+  const filteredIssues = issues.filter(issue => {
+    if (typeFilter !== 'all' && issue.issue_type !== typeFilter) return false;
+    if (statusFilter !== 'all' && issue.status !== statusFilter) return false;
+    return true;
+  });
 
-  const filteredIssues = filter === 'all'
-    ? issues
-    : issues.filter(i => i.issue_type === filter || i.status === filter);
-
-  const severityColor = (severity: string) => {
-    if (severity === 'high') return 'text-red-400';
-    if (severity === 'medium') return 'text-yellow-400';
-    return 'text-green-400';
-  };
-
-  const statusColor = (status: string) => {
-    if (status === 'open') return 'bg-red-500';
-    if (status === 'fixed') return 'bg-yellow-500';
-    return 'bg-green-500';
-  };
+  const openCount = issues.filter(i => i.status === 'open').length;
+  const fixedCount = issues.filter(i => i.status === 'fixed').length;
+  const verifiedCount = issues.filter(i => i.status === 'verified').length;
 
   return (
-    <main className="h-screen bg-gray-950 text-white flex flex-col">
-      <header className="bg-gray-900 border-b border-gray-800 px-6 py-4">
-        <div className="max-w-full mx-auto flex justify-between items-center">
-          <Link href="/"><h1 className="text-2xl font-bold text-blue-400">NammaMarg</h1></Link>
-          <div className="flex gap-3">
-            <Link href="/report" className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm transition">
-              Report Issue
-            </Link>
-            <Link href="/dashboard" className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm transition">
-              Dashboard
-            </Link>
+    <main className="h-[calc(100vh-3.5rem)] bg-background text-foreground flex overflow-hidden">
+
+      {/* ── Sidebar ──────────────────────────────────────── */}
+      <aside className="w-[340px] flex flex-col border-r border-border bg-card flex-shrink-0">
+
+        {/* Header + filters */}
+        <div className="p-4 border-b border-border space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-sm">Live Issues Map</h2>
+            <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">
+              {loadingIssues ? '…' : `${filteredIssues.length} shown`}
+            </span>
+          </div>
+
+          {/* Type filters */}
+          <div className="flex flex-wrap gap-1.5">
+            {ISSUE_TYPES.map(f => (
+              <button
+                key={f}
+                onClick={() => setTypeFilter(f)}
+                className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                  typeFilter === f
+                    ? 'bg-violet-600 text-white shadow-[0_0_8px_rgba(139,92,246,0.5)]'
+                    : 'bg-secondary text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {f === 'all' ? 'All types' : `${issueEmoji(f)} ${f.replace(/_/g, ' ')}`}
+              </button>
+            ))}
+          </div>
+
+          {/* Status filters */}
+          <div className="grid grid-cols-4 gap-1">
+            {STATUSES.map(s => (
+              <button
+                key={s}
+                onClick={() => setStatusFilter(s)}
+                className={`py-1 rounded-lg text-xs font-medium transition-all ${
+                  statusFilter === s
+                    ? s === 'all' ? 'bg-secondary text-foreground ring-1 ring-border'
+                      : s === 'open' ? 'bg-red-500 text-white'
+                      : s === 'fixed' ? 'bg-yellow-500 text-black'
+                      : 'bg-green-500 text-white'
+                    : 'bg-secondary text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {s === 'all' ? 'All' : s === 'open' ? '🔴 Open' : s === 'fixed' ? '🟡 Fixed' : '🟢 Done'}
+              </button>
+            ))}
           </div>
         </div>
-      </header>
 
-      <div className="flex flex-1">
-        <div className="w-96 bg-gray-900 border-r border-gray-800 flex flex-col">
-          <div className="p-4 border-b border-gray-800">
-            <h2 className="font-semibold mb-3">Live Issues ({filteredIssues.length})</h2>
-            <div className="flex flex-wrap gap-2">
-              {['all', 'pothole', 'garbage_dump', 'broken_streetlight', 'open', 'verified'].map(f => (
-                <button
-                  key={f}
-                  onClick={() => setFilter(f)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition ${
-                    filter === f ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'
-                  }`}
-                >
-                  {f.replace('_', ' ')}
-                </button>
-              ))}
+        {/* Legend */}
+        <div className="px-4 py-2 border-b border-border flex items-center gap-3 text-xs text-muted-foreground">
+          {[['bg-red-500', 'Open'], ['bg-yellow-500', 'Fixed'], ['bg-green-500', 'Verified']].map(([cls, label]) => (
+            <span key={label} className="flex items-center gap-1.5">
+              <span className={`w-2.5 h-2.5 rounded-full ${cls} inline-block`} />
+              {label}
+            </span>
+          ))}
+          <span className="ml-auto">Larger = high severity</span>
+        </div>
+
+        {/* Issue list */}
+        <div className="flex-1 overflow-y-auto">
+          {loadingIssues ? (
+            <div className="flex flex-col items-center justify-center h-32 gap-2">
+              <div className="w-6 h-6 rounded-full border-2 border-border border-t-violet-500 animate-spin" />
+              <p className="text-xs text-muted-foreground">Loading issues…</p>
             </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto">
-            {filteredIssues.length === 0 ? (
-              <div className="p-6 text-center text-gray-500">No issues found</div>
-            ) : (
-              filteredIssues.map(issue => (
-                <div
-                  key={issue.id}
-                  onClick={() => setSelected(issue)}
-                  className={`p-4 border-b border-gray-800 cursor-pointer hover:bg-gray-800 transition ${
-                    selected?.id === issue.id ? 'bg-gray-800 border-l-4 border-l-blue-500' : ''
-                  }`}
-                >
-                  <div className="flex justify-between items-start mb-1">
-                    <div className="flex items-center gap-2">
-                      <span>{issueIcon(issue.issue_type, issue.severity).emoji}</span>
-                      <span className="font-medium capitalize text-sm">
-                        {issue.issue_type.replace('_', ' ')}
-                      </span>
-                    </div>
-                    <span className={`text-xs px-2 py-0.5 rounded-full text-white ${statusColor(issue.status)}`}>
-                      {issue.status}
-                    </span>
-                  </div>
-                  <div className="text-gray-400 text-xs mb-1">{issue.ward_name}</div>
-                  <div className={`text-xs font-medium ${severityColor(issue.severity)}`}>
-                    {issue.severity} severity • {issue.severity_score}/10
-                  </div>
-                  {issue.reported_count > 1 && (
-                    <div className="text-xs text-blue-400 mt-1">
-                      🔄 Reported {issue.reported_count} times
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        <div className="flex-1 relative">
-          {!MapComponents ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-gray-400">Loading map...</div>
+          ) : filteredIssues.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">
+              <div className="text-3xl mb-2">🗺️</div>
+              <p className="text-sm">No issues match the current filters</p>
             </div>
           ) : (
-            <MapComponents.RL.MapContainer
-              center={[12.9352, 77.6245]}
-              zoom={12}
-              style={{ height: '100%', width: '100%' }}
-            >
-              <MapComponents.RL.TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; OpenStreetMap contributors'
-              />
-              {filteredIssues.map(issue => (
-                <MapComponents.RL.CircleMarker
-                  key={issue.id}
-                  center={[issue.latitude, issue.longitude]}
-                  radius={issue.severity === 'high' ? 14 : issue.severity === 'medium' ? 10 : 7}
-                  pathOptions={{
-                    color: issueIcon(issue.issue_type, issue.severity).color,
-                    fillColor: issueIcon(issue.issue_type, issue.severity).color,
-                    fillOpacity: 0.7,
-                  }}
-                  eventHandlers={{ click: () => setSelected(issue) }}
-                >
-                  <MapComponents.RL.Popup>
-                    <div className="text-gray-900">
-                      <strong className="capitalize">{issue.issue_type.replace('_', ' ')}</strong>
-                      <br />Severity: {issue.severity} ({issue.severity_score}/10)
-                      <br />Ward: {issue.ward_name}
-                      <br />Status: {issue.status}
+            filteredIssues.map(issue => (
+              <div
+                key={issue.id}
+                onClick={() => setSelected(issue)}
+                className={`px-4 py-3 border-b border-border cursor-pointer transition-all hover:bg-secondary/40 ${
+                  selected?.id === issue.id
+                    ? 'bg-violet-500/10 border-l-2 border-l-violet-500 pl-3.5'
+                    : ''
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start gap-2.5 min-w-0">
+                    <span className="text-base mt-0.5 flex-shrink-0">{issueEmoji(issue.issue_type)}</span>
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm capitalize text-foreground leading-tight truncate">
+                        {issue.issue_type.replace(/_/g, ' ')}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{issue.ward_name}</p>
+                      <p className="text-xs text-muted-foreground/60 mt-0.5">
+                        {new Date(issue.created_at).toLocaleDateString()}
+                      </p>
                     </div>
-                  </MapComponents.RL.Popup>
-                </MapComponents.RL.CircleMarker>
-              ))}
-            </MapComponents.RL.MapContainer>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium capitalize ${statusClass(issue.status)}`}>
+                      {issue.status}
+                    </span>
+                    <span className={`text-xs px-1.5 py-0.5 rounded-full capitalize ${severityClass(issue.severity)}`}>
+                      {issue.severity}
+                    </span>
+                  </div>
+                </div>
+                {issue.reported_count > 1 && (
+                  <p className="text-xs text-violet-400 mt-1.5">
+                    🔄 {issue.reported_count} reports
+                  </p>
+                )}
+              </div>
+            ))
           )}
+        </div>
 
-          {selected && (
-            <div className="absolute bottom-4 right-4 bg-gray-900 rounded-xl p-4 border border-gray-700 w-80 z-50">
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="font-semibold capitalize">
-                  {issueIcon(selected.issue_type, selected.severity).emoji} {selected.issue_type.replace('_', ' ')}
-                </h3>
-                <button onClick={() => setSelected(null)} className="text-gray-500 hover:text-white">✕</button>
+        {/* Report CTA */}
+        <div className="p-3 border-t border-border">
+          <Link
+            href="/report"
+            className="block w-full text-center py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white text-sm font-medium transition-all shadow-[0_0_12px_rgba(139,92,246,0.3)]"
+          >
+            📷 Report a New Issue
+          </Link>
+        </div>
+      </aside>
+
+      {/* ── Map canvas ───────────────────────────────────── */}
+      <div className="flex-1 relative">
+        <MapboxCanvas
+          issues={filteredIssues}
+          selected={selected}
+          onSelect={issue => setSelected(issue)}
+          openCount={openCount}
+          fixedCount={fixedCount}
+          verifiedCount={verifiedCount}
+        />
+
+        {/* Selected issue detail panel */}
+        {selected && (
+          <div className="absolute bottom-6 right-6 bg-card/95 backdrop-blur-md rounded-2xl p-4 border border-border w-[300px] z-10 shadow-2xl">
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">{issueEmoji(selected.issue_type)}</span>
+                <div>
+                  <h3 className="font-semibold capitalize text-sm text-foreground leading-tight">
+                    {selected.issue_type.replace(/_/g, ' ')}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">{selected.ward_name}</p>
+                </div>
               </div>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Ward</span>
-                  <span>{selected.ward_name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Severity</span>
-                  <span className={severityColor(selected.severity)}>
-                    {selected.severity} ({selected.severity_score}/10)
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Status</span>
-                  <span className="capitalize">{selected.status}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Reports</span>
-                  <span>{selected.reported_count}</span>
-                </div>
-                <div className="text-gray-400 mt-2 text-xs">{selected.description}</div>
+              <button
+                onClick={() => setSelected(null)}
+                className="text-muted-foreground hover:text-foreground w-6 h-6 flex items-center justify-center rounded-lg hover:bg-secondary transition-colors text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex gap-2 mb-3">
+              <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${statusClass(selected.status)}`}>
+                {selected.status}
+              </span>
+              <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${severityClass(selected.severity)}`}>
+                {selected.severity} · {selected.severity_score}/10
+              </span>
+            </div>
+
+            <div className="space-y-1.5 text-xs text-muted-foreground">
+              <div className="flex justify-between">
+                <span>Reports</span>
+                <span className="text-foreground font-medium">{selected.reported_count}</span>
               </div>
+              <div className="flex justify-between">
+                <span>Reported on</span>
+                <span className="text-foreground">{new Date(selected.created_at).toLocaleDateString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Reporter</span>
+                <span className="text-foreground truncate max-w-[140px]">{selected.reporter_name || 'Anonymous'}</span>
+              </div>
+            </div>
+
+            {selected.description && (
+              <p className="mt-2 pt-2 border-t border-border text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                {selected.description}
+              </p>
+            )}
+
+            <div className="mt-3 flex gap-2">
               {selected.status === 'fixed' && (
                 <Link
                   href={`/verify/${selected.id}`}
-                  className="mt-3 w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-sm text-center block transition"
+                  className="flex-1 bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white py-2 rounded-xl text-xs font-medium text-center transition-all"
                 >
-                  Verify Fix ✓
+                  ✓ Verify Fix
                 </Link>
               )}
+              <Link
+                href={`/issues/${selected.id}`}
+                className="flex-1 bg-secondary hover:bg-secondary/80 text-foreground py-2 rounded-xl text-xs font-medium text-center transition-colors border border-border"
+              >
+                View Details →
+              </Link>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </main>
   );

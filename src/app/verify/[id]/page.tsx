@@ -207,13 +207,6 @@ export default function VerifyPage() {
 
   return (
     <main className="min-h-screen bg-gray-950 text-white">
-      <header className="bg-gray-900 border-b border-gray-800 px-6 py-4">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <Link href="/"><h1 className="text-2xl font-bold text-blue-400">NammaMarg</h1></Link>
-          <span className="text-gray-400 text-sm">Verify Fix</span>
-        </div>
-      </header>
-
       <div className="max-w-4xl mx-auto px-6 py-10">
         <h2 className="text-3xl font-bold mb-2">Verify Issue Fix</h2>
         <p className="text-gray-400 mb-8">Complete all steps below to submit your verification.</p>

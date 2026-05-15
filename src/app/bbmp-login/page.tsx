@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,10 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, LoaderIcon, MapPinIcon, ShieldCheckIcon } from "lucide-react";
 import { toast } from "sonner";
 
+const BBMP_EMAIL = "bbmp@wardwise.com";
+
 export default function BBMPLoginPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState("bbmp@wardwise.com");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState(BBMP_EMAIL);
+  const [password, setPassword] = useState("BBMP@2024");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -23,19 +23,57 @@ export default function BBMPLoginPage() {
       toast.error("Email and password are required!");
       return;
     }
+    if (email !== BBMP_EMAIL) {
+      toast.error("This portal is for BBMP officials only.");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      // 1️⃣  Try signing in
+      let { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+      // 2️⃣  Account doesn't exist yet — create it automatically
       if (error) {
-        toast.error(error.message);
-        return;
+        const isInvalidCreds =
+          error.message.toLowerCase().includes("invalid") ||
+          error.message.toLowerCase().includes("credentials") ||
+          error.message.toLowerCase().includes("not found");
+
+        if (!isInvalidCreds) {
+          toast.error(error.message);
+          return;
+        }
+
+        // Auto-provision BBMP account
+        const { error: signUpErr } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { full_name: "BBMP Official", role: "bbmp" } },
+        });
+
+        // Ignore "already registered" — it just means sign-in should work now
+        if (signUpErr && !signUpErr.message.toLowerCase().includes("already")) {
+          toast.error(signUpErr.message);
+          return;
+        }
+
+        // 3️⃣  Sign in after account creation
+        const retry = await supabase.auth.signInWithPassword({ email, password });
+        if (retry.error) {
+          toast.error(retry.error.message);
+          return;
+        }
+        data = retry.data;
       }
-      if (data.user?.email !== "bbmp@wardwise.com") {
+
+      if (!data?.user || data.user.email !== BBMP_EMAIL) {
         toast.error("This portal is for BBMP officials only.");
         await supabase.auth.signOut();
         return;
       }
-      router.push("/dashboard");
+
+      window.location.href = "/dashboard";
     } catch {
       toast.error("An error occurred. Please try again.");
     } finally {
@@ -81,8 +119,8 @@ export default function BBMPLoginPage() {
               <span className="text-foreground select-all">BBMP@2024</span>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Create this account in your Supabase Auth dashboard first.
+          <p className="text-xs text-green-400/80 mt-2">
+            ✓ Credentials are pre-filled — just click Sign in.
           </p>
         </div>
 

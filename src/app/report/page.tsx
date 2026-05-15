@@ -7,20 +7,15 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/providers/auth-context';
 import { UploadIcon, LocateIcon } from 'lucide-react';
 
-const wards = [
-  { number: 1, name: 'Koramangala' },
-  { number: 2, name: 'Indiranagar' },
-  { number: 3, name: 'JP Nagar' },
-  { number: 4, name: 'Jayanagar' },
-  { number: 5, name: 'Whitefield' },
-  { number: 6, name: 'Hebbal' },
-  { number: 7, name: 'Marathahalli' },
-  { number: 8, name: 'BTM Layout' },
-  { number: 9, name: 'HSR Layout' },
-  { number: 10, name: 'Banashankari' },
-];
+interface Ward {
+  id: string;
+  number: number;
+  name: string;
+}
 
 export default function ReportPage() {
+  const [wards, setWards] = useState<Ward[]>([]);
+  const [wardsLoading, setWardsLoading] = useState(true);
   const [image, setImage] = useState<string | null>(null);
   const [classification, setClassification] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -30,8 +25,8 @@ export default function ReportPage() {
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [form, setForm] = useState({
     reporter_name: '',
-    ward_name: 'Koramangala',
-    ward_number: 1,
+    ward_name: '',
+    ward_number: 0,
     latitude: 12.9352,
     longitude: 77.6245,
   });
@@ -39,12 +34,28 @@ export default function ReportPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
 
+  // Fetch wards from DB
+  useEffect(() => {
+    axios.get('/api/wards')
+      .then(res => {
+        const fetchedWards: Ward[] = res.data.wards || [];
+        setWards(fetchedWards);
+        if (fetchedWards.length > 0) {
+          setForm(prev => ({
+            ...prev,
+            ward_name: fetchedWards[0].name,
+            ward_number: fetchedWards[0].number,
+          }));
+        }
+      })
+      .catch(err => console.error('Failed to load wards:', err))
+      .finally(() => setWardsLoading(false));
+  }, []);
+
   useEffect(() => {
     if (authLoading) return;
     const email = user?.email || '';
-    // Redirect BBMP officials to their dashboard
     if (email === 'bbmp@wardwise.com') { router.push('/dashboard'); return; }
-    // Pre-fill reporter name from account if available
     if (user?.user_metadata?.full_name) {
       setForm(prev => ({ ...prev, reporter_name: user.user_metadata.full_name }));
     }
@@ -206,15 +217,20 @@ export default function ReportPage() {
               <label className="block text-sm font-medium text-muted-foreground mb-2">Ward</label>
               <select
                 value={form.ward_number}
+                disabled={wardsLoading}
                 onChange={(e) => {
                   const ward = wards.find(w => w.number === parseInt(e.target.value));
                   setForm(prev => ({ ...prev, ward_number: parseInt(e.target.value), ward_name: ward?.name || '' }));
                 }}
-                className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-violet-500/50 transition-colors"
+                className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-violet-500/50 transition-colors disabled:opacity-50"
               >
-                {wards.map(w => (
-                  <option key={w.number} value={w.number}>{w.name}</option>
-                ))}
+                {wardsLoading ? (
+                  <option>Loading wards…</option>
+                ) : (
+                  wards.map(w => (
+                    <option key={w.number} value={w.number}>{w.name}</option>
+                  ))
+                )}
               </select>
             </div>
 

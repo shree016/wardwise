@@ -26,11 +26,15 @@ const SignInForm = () => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        toast.error(error.message);
+        if (error.message.toLowerCase().includes('email not confirmed')) {
+          toast.error("Your email isn't confirmed yet. Ask an admin to disable email confirmation in Supabase, or check your inbox.");
+        } else {
+          toast.error(error.message);
+        }
         return;
       }
       const userEmail = data.user?.email || '';
-      router.push(userEmail === 'bbmp@wardwise.com' ? '/dashboard' : '/citizen');
+      window.location.href = userEmail === 'bbmp@wardwise.com' ? '/dashboard' : '/citizen';
     } catch {
       toast.error("An error occurred. Please try again.");
     } finally {

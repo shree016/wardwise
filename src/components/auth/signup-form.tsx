@@ -4,20 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase-client";
 import { Eye, EyeOff, LoaderIcon } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { Label } from "../ui/label";
 
 const SignUpForm = () => {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,39 +27,37 @@ const SignUpForm = () => {
     }
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: { data: { full_name: name } },
       });
-      if (error) {
-        toast.error(error.message);
+
+      if (signUpError) {
+        toast.error(signUpError.message);
         return;
       }
-      if (data.session) {
-        router.push('/citizen');
-      } else {
-        setEmailSent(true);
-        toast.success("Check your email for a confirmation link!");
+
+      // Session is available immediately when email confirmation is disabled
+      if (signUpData.session) {
+        window.location.href = '/citizen';
+        return;
       }
+
+      // No session yet — try signing in directly (handles already-registered accounts too)
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        toast.error("Account created — please sign in.");
+        window.location.href = '/auth/sign-in';
+        return;
+      }
+      window.location.href = signInData.user?.email === 'bbmp@wardwise.com' ? '/dashboard' : '/citizen';
     } catch {
       toast.error("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
-
-  if (emailSent) {
-    return (
-      <div className="flex flex-col items-start gap-y-6 py-8 w-full px-0.5">
-        <h2 className="text-2xl font-semibold">Check your email</h2>
-        <p className="text-muted-foreground text-sm">
-          We sent a confirmation link to <strong>{email}</strong>. Click the link to activate your account, then{" "}
-          <Link href="/auth/sign-in" className="text-primary">sign in</Link>.
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col items-start gap-y-6 py-8 w-full px-0.5">
