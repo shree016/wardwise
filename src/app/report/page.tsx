@@ -42,7 +42,12 @@ export default function ReportPage() {
   useEffect(() => {
     if (authLoading) return;
     const email = user?.email || '';
-    if (email === 'bbmp@wardwise.com') router.push('/dashboard');
+    // Redirect BBMP officials to their dashboard
+    if (email === 'bbmp@wardwise.com') { router.push('/dashboard'); return; }
+    // Pre-fill reporter name from account if available
+    if (user?.user_metadata?.full_name) {
+      setForm(prev => ({ ...prev, reporter_name: user.user_metadata.full_name }));
+    }
   }, [authLoading, user, router]);
 
   const getLocation = () => {

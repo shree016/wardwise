@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PROTECTED_ROUTES = ["/report", "/citizen", "/wards", "/dashboard", "/issues", "/verify", "/map"];
+const PROTECTED_ROUTES = ["/citizen", "/dashboard", "/verify"];
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -37,8 +37,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth/sign-in', request.url));
   }
 
-  if (user && (url.startsWith('/auth/sign-in') || url.startsWith('/auth/sign-up'))) {
-    return NextResponse.redirect(new URL('/citizen', request.url));
+  if (user && (url.startsWith('/auth/sign-in') || url.startsWith('/auth/sign-up') || url.startsWith('/bbmp-login'))) {
+    const dest = user.email === 'bbmp@wardwise.com' ? '/dashboard' : '/citizen';
+    return NextResponse.redirect(new URL(dest, request.url));
   }
 
   return supabaseResponse;
@@ -52,5 +53,6 @@ export const config = {
     '/login',
     '/auth/sign-in',
     '/auth/sign-up',
+    '/bbmp-login',
   ],
 };

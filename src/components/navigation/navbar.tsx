@@ -14,7 +14,7 @@ import { cn, NAV_LINKS } from "@/utils";
 import { useAuth } from "@/components/providers/auth-context";
 import {
   LucideIcon, SunIcon, MoonIcon, MapPinIcon,
-  MapIcon, TrophyIcon, CameraIcon, LayoutDashboardIcon, LogOutIcon, BarChart3Icon,
+  MapIcon, TrophyIcon, CameraIcon, LayoutDashboardIcon, LogOutIcon, BarChart3Icon, ShieldCheckIcon,
 } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
@@ -163,6 +163,9 @@ const Navbar = () => {
               </>
             ) : (
               <>
+                <Link href="/bbmp-login" className={buttonVariants({ size: "sm", variant: "ghost", className: "text-sm gap-1 text-muted-foreground" })}>
+                  <ShieldCheckIcon className="w-3.5 h-3.5" /> BBMP
+                </Link>
                 <Link href="/auth/sign-in" className={buttonVariants({ size: "sm", variant: "ghost" })}>Sign In</Link>
                 <Link href="/report" className={buttonVariants({ size: "sm", className: "bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white border-0 shadow-[0_0_15px_rgba(139,92,246,0.4)] hover:shadow-[0_0_20px_rgba(139,92,246,0.6)] transition-all duration-300" })}>
                   Report an Issue

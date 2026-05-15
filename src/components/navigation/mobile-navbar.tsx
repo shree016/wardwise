@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn, NAV_LINKS } from "@/utils";
 import { useAuth } from "@/components/providers/auth-context";
-import { BarChart3Icon, CameraIcon, LayoutDashboardIcon, LogOutIcon, LucideIcon, MapIcon, Menu, TrophyIcon, X } from "lucide-react";
+import { BarChart3Icon, CameraIcon, LayoutDashboardIcon, LogOutIcon, LucideIcon, MapIcon, Menu, ShieldCheckIcon, TrophyIcon, X } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from 'react';
 import { ThemeToggle } from "./navbar";
@@ -74,12 +74,18 @@ const MobileNavbar = () => {
                             </div>
                         ) : (
                             <>
-                                <div className="flex items-center justify-evenly w-full space-x-2 mb-6">
-                                    <Link href="/auth/sign-in" onClick={handleClose} className={buttonVariants({ variant: "outline", className: "w-full" })}>
-                                        Sign In
-                                    </Link>
-                                    <Link href="/report" onClick={handleClose} className={buttonVariants({ className: "w-full bg-gradient-to-r from-violet-600 to-blue-600 text-white border-0" })}>
-                                        Report Issue
+                                <div className="flex flex-col gap-2 w-full mb-6">
+                                    <div className="flex gap-2">
+                                        <Link href="/auth/sign-in" onClick={handleClose} className={buttonVariants({ variant: "outline", className: "flex-1" })}>
+                                            Sign In
+                                        </Link>
+                                        <Link href="/report" onClick={handleClose} className={buttonVariants({ className: "flex-1 bg-gradient-to-r from-violet-600 to-blue-600 text-white border-0" })}>
+                                            Report Issue
+                                        </Link>
+                                    </div>
+                                    <Link href="/bbmp-login" onClick={handleClose} className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground py-2 border border-border rounded-lg transition-colors">
+                                        <ShieldCheckIcon className="w-4 h-4 text-violet-400" />
+                                        BBMP Officials Login
                                     </Link>
                                 </div>
                                 <ul className="flex flex-col items-start w-full">

@@ -331,12 +331,18 @@ const HomePage = () => {
                 </Link>
               </Button>
               <Button asChild variant="outline" className="border-border/60 hover:border-violet-500/50 hover:text-violet-500 transition-all duration-300 px-6">
-                <Link href="/#dashboard" className="flex items-center gap-2">
-                  View Live Dashboard
+                <Link href="/map" className="flex items-center gap-2">
+                  View Live Map
                   <ArrowRightIcon className="w-4 h-4" />
                 </Link>
               </Button>
             </div>
+            <p className="text-sm text-muted-foreground mt-4 z-50">
+              No login required to report ·{" "}
+              <Link href="/bbmp-login" className="text-violet-400 hover:text-violet-300 transition-colors underline underline-offset-2">
+                BBMP Officials Login →
+              </Link>
+            </p>
 
             {/* Floating stats */}
             <div className="flex flex-wrap items-center justify-center gap-6 mt-10 text-sm text-muted-foreground">
