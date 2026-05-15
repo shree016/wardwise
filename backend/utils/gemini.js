@@ -31,6 +31,7 @@ async function classifyImage(base64Image, mimeType = 'image/jpeg') {
 
     const rawText = response.data.candidates[0].content.parts[0].text;
     const cleaned = rawText.replace(/```json|```/g, '').trim();
+    console.log("response : ",cleaned)
     return JSON.parse(cleaned);
 
   } catch (error) {

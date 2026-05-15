@@ -70,6 +70,8 @@ if (verifier_lat && verifier_lng) {
   console.log(`Verifier distance from issue: ${Math.round(distance)}m`);
 
   if (distance > 500) {
+
+    console.log("Distance => ");
     return res.status(403).json({
       success: false,
       too_far: true,
